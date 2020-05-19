@@ -1,6 +1,17 @@
 # holdem-monte-carlo-evaluator
 javascript win/tie/loss evaluator for hold'em hands, using the npm adaptation of 2+2 pascal evaluator (poker-evaluator)
 
+
+Example Usage:
+------------------------------------------------
+
+holdemMonteCarlo(['As','Ac'],['9h','Ah','Jc'],5,1000000);
+
+holdemMonteCarlo([51,52],[9,50,36],5,1000000);
+
+(recommend using numbers to represent cards for ~2x speedier lookup)
+
+
 Example Output:
 ------------------------------------------------
 Hand: As,Ac
@@ -13,13 +24,6 @@ tied: 0.57%
 
 lost: 50.46%
 
-
-Example Usages:
-------------------------------------------------
-
-holdemMonteCarlo([51,52],[9,50,36],4,1000000);
-
-holdemMonteCarlo(['As','Ac'],['9h','Ah','Jc'],4,1000000);
 
 Helpful for converting cards as strings to numbers for ~2x speedier lookup:
 ------------------------------------------------

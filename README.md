@@ -12,17 +12,18 @@ won: 48.97%
 tied: 0.57%
 
 lost: 50.46%
-------------------------------------------------
+
 
 Example Usages:
+------------------------------------------------
 
 holdemMonteCarlo([51,52],[9,50,36],4,1000000);
 
 holdemMonteCarlo(['As','Ac'],['9h','Ah','Jc'],4,1000000);
 
 Helpful for converting cards as strings to numbers for ~2x speedier lookup:
-
-let cards = {
+------------------------------------------------
+cards:
  "2c": 1,
  "2d": 2,
  "2h": 3,
@@ -75,4 +76,3 @@ let cards = {
  "ad": 50,
  "ah": 51,
  "as": 52
-};

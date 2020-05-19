@@ -4,17 +4,24 @@ javascript win/tie/loss evaluator for hold'em hands, using the npm adaptation of
 Example Output:
 ------------------------------------------------
 Hand: As,Ac
+
 Board: , 5 opponents, 1000000 runs
+
 won: 48.97%
+
 tied: 0.57%
+
 lost: 50.46%
 ------------------------------------------------
 
 Example Usages:
+
 holdemMonteCarlo([51,52],[9,50,36],4,1000000);
+
 holdemMonteCarlo(['As','Ac'],['9h','Ah','Jc'],4,1000000);
 
 Helpful for converting cards as strings to numbers for ~2x speedier lookup:
+
 let cards = {
  "2c": 1,
  "2d": 2,

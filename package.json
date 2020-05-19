@@ -1,0 +1,44 @@
+{
+  "name": "holdem-monte-carlo-evaluator",
+  "version": "0.5.1",
+  "dependencies": {
+    "poker-evaluator": "^0.3.2"
+  },
+  "description": "win/tie/loss evaluator for hold'em hands, running on npm adaptation of 2+2 pascal evaluator (poker-evaluator)",
+  "main": "index.js",
+  "scripts": {
+    "test": "holdemMonteCarlo([51,52],[9,50,36],4,1000000)"
+  },
+  "repository": {
+    "type": "git",
+    "url": "holdem-monte-carlo-evaluator"
+  },
+  "keywords": [
+    "holdem",
+    "evaluator",
+    "monte",
+    "carlo",
+    "monte",
+    "carlo",
+    "win",
+    "loss",
+    "tie",
+    "javascript",
+    "js",
+    "npm",
+    "hold'em",
+    "texas",
+    "texas",
+    "hold'em",
+    "evaluate",
+    "equity",
+    "estimator",
+    "estimate",
+    "estimation",
+    "model",
+    "simulation",
+    "poker"
+  ],
+  "author": "tmercer",
+  "license": "MIT"
+}

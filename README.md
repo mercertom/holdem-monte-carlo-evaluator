@@ -12,7 +12,36 @@ holdemMonteCarlo([51,52],[9,50,36],5,1000000);
 (recommend using numbers to represent cards for ~2x speedier lookup)
 
 
-Example Output:
+Return Values
+------------------------------------------------
+
+object {
+results:results
+handOdds:handOdds
+}
+
+returnObject.results.wins
+returnObject.results.ties
+returnObject.results.losses
+returnObject.results.runs
+
+returnObject.handOdds is an array where player 0 is the bot, opponents are 1,2,3,4...
+
+returnObject.handOdds[x] is an object with percent likelihood of player x achieving various hands, for example:
+
+returnObject.handOdds[0]= {
+hicard:0,
+pair:7,
+twopair:42,
+trips:36,
+straight:10,
+flush:0),
+FH:4,
+quads:1,
+straightflush:0,
+}
+
+Example Console Output:
 ------------------------------------------------
 Hand: As,Ac
 
@@ -25,7 +54,7 @@ tied: 0.57%
 lost: 50.46%
 
 
-Helpful for converting cards as strings to numbers for ~2x speedier lookup:
+This table is helpful for converting cards as strings to numbers for ~2x speedier lookups in poker evaluator:
 ------------------------------------------------
 cards:
  "2c": 1,

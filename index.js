@@ -1,6 +1,18 @@
-exports.holdemMonteCarlo = function (hand,board,numberOpponents,runs) {
+exports.holdemMonteCarlo = function (hand,board,numberOpponents,opponentLags,runs) {
 	
-	var pokerEval = require("poker-evaluator");
+	var pokerEval = require('latest-poker-evaluator');
+	
+	let numberPlayers = numberOpponents + 1;
+	
+	// if not specified, assume full ranges (100% LAG) for each opponent
+	if (!opponentLags) {
+		var opponentsLags = [];
+	}
+	for (i = 0; i < numberOpponents; i++) {
+		if (!opponentLags[i] || opponentLags[i] <= 0 || opponentLags[i] > 1) {
+			opponentLags[i] = 1;
+		}
+	}
 	
 	//Initialize results object
 	let results = {
@@ -25,18 +37,42 @@ exports.holdemMonteCarlo = function (hand,board,numberOpponents,runs) {
 		deck.splice(deck.indexOf(board[i]),1);
 	}
 	
+	let handValues = [
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	];
+	
+	let hands = [
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	];
+	
 	//Monte Carlo Loop
-	for (mcRuns = 0; mcRuns < runs; mcRuns++) {
+	for (runNum = 0; runNum < runs; runNum++) {
 		
 		//(Re)set arrays
-		let otherHands = [];
-		let handValues = [];
 		let mcDeck = deck.slice();
 		let mcBoard = board.slice();
 		
 		//For each opponent, draw two cards from the deck
-		for ( i = 0; i < numberOpponents; i++ ) {
-			otherHands[i] = [randCard(mcDeck),randCard(mcDeck)];
+		for ( i = 1; i <= numberOpponents; i++ ) {
+			hands[i][runNum] = [randCard(mcDeck),randCard(mcDeck)];
 		}
 
 		//For each unfilled board card, draw a card from the deck
@@ -45,22 +81,100 @@ exports.holdemMonteCarlo = function (hand,board,numberOpponents,runs) {
 		}
 		
 		//evaluate the value (rank) of each 7 card hand, store the values in handValues[]
-		handValues[0] = pokerEval.evalHand(hand.concat(mcBoard)).value;
-		for ( i = 0; i < otherHands.length; i++ ) {
-			handValues[i + 1] = pokerEval.evalHand(otherHands[i].concat(mcBoard)).value;
+		handValues[0][runNum] = pokerEval.evalHand(hand.concat(mcBoard)).value;
+		for ( i = 1; i <= numberOpponents; i++ ) {
+			handValues[i][runNum] = pokerEval.evalHand(hands[i][runNum].concat(mcBoard)).value;
 		}
-		
-		//determine won/lost/tied, and increment results object
+	}
+	
+	//Pre-eval logic for ranges
+	let cutoff = [];
+	orderedHandValues = [];
+	for (i = 1; i <= numberOpponents; i++) {
+		orderedHandValues[i] = handValues[i].slice();
+		orderedHandValues[i].sort(function(a, b) {
+	  		return a - b;
+		});
+		cutoff[i] = orderedHandValues[i][Math.floor(runs * (1 - opponentLags[i - 1]))];
+	}
+	
+	//Trim impossibilities, based on players' tightness
+	for (runNum = 0; runNum < handValues[0].length; runNum++) {
+		for (opp = 1; opp <= numberOpponents; opp++) {
+			if (handValues[opp][runNum] < cutoff[opp]) {
+				for (i = 0; i <= numberOpponents; i++) {
+					handValues[i].splice(runNum,1);
+					if(i > 0) {
+						hands[i].splice(runNum,1);
+					}
+				}
+				runNum --;
+				break;
+			}
+		}
+	}
+	
+	let handTypes = [
+    'invalid hand',
+    'hicard',
+    'pair',
+    'twopair',
+    'trips',
+    'straight',
+    'flush',
+    'FH',
+    'quads',
+    'straightflush'
+  	];
+  	
+  	let probableHands = [];
+  	let possibleHandTypes = [];
+  	
+  	for (runNum = 0; runNum < handValues[0].length; runNum++) {
+	  	for (i = 0; i <= numberOpponents; i++) {
+	  		if (!possibleHandTypes[i]) {
+	  			possibleHandTypes[i] = [];
+	  		}
+	  		possibleHandTypes[i].push(handTypes[handValues[i][runNum] >> 12]);
+	  	}
+	}
+
+	for (player in possibleHandTypes) {
+		let handTypesCounts = {};
+		possibleHandTypes[player].forEach((el) => {
+			handTypesCounts[el] = handTypesCounts[el] ? (handTypesCounts[el] += 1) : 1;
+		});
+		probableHands[player] = handTypesCounts;
+	}
+	
+	let handOdds = [];
+	
+	for (player in probableHands) {
+		handOdds[player] = {
+		hicard:Math.floor( 100 * probableHands[player].hicard / handValues[0].length || 0),
+		pair:Math.floor( 100 * probableHands[player].pair / handValues[0].length || 0),
+		twopair:Math.floor( 100 * probableHands[player].twopair / handValues[0].length || 0),
+		trips:Math.floor( 100 * probableHands[player].trips / handValues[0].length || 0),
+		straight:Math.floor( 100 * probableHands[player].straight / handValues[0].length || 0),
+		flush:Math.floor( 100 * probableHands[player].flush / handValues[0].length || 0),
+		FH:Math.floor( 100 * probableHands[player].FH / handValues[0].length || 0),
+		quads:Math.floor( 100 * probableHands[player].quads / handValues[0].length || 0),
+		straightflush:Math.floor( 100 * probableHands[player].straightflush / handValues[0].length || 0),
+		};
+	}
+	
+	//Eval loop: determine won/lost/tied, and increment results object
+	for (runNum = 0; runNum < handValues[0].length; runNum++, results.runs++) {
 		let isTied = false;
-		for (i = 1; i < handValues.length; i++) {
-			if ( handValues[0] < handValues[i] ) {
+		for (i = 1; i <= numberOpponents; i++) {
+			if ( handValues[0][runNum] < handValues[i][runNum] ) {
 				results.losses++;
 				break;
 			}
-			else if (handValues[0] == handValues[i]) {
+			else if (handValues[0][runNum] == handValues[i][runNum]) {
 				isTied = true;
 			}
-			if (i == handValues.length - 1) {
+			if (i == numberOpponents) {
 				if (isTied) {
 					results.ties++;
 				}
@@ -69,21 +183,26 @@ exports.holdemMonteCarlo = function (hand,board,numberOpponents,runs) {
 				}
 			}
 		}
-		results.runs++;
+	}
+	//catch case where players are impossibly tight
+	if (handValues[0].length == 0) {
+		results.runs = 1;
 	}
 	
 	//Output expected win/tie/loss rates
-	/*console.log('------------------------------------------------');
+	console.log('------------------------------------------------');
 	console.log('Hand: ' + hand);
 	console.log('Board: ' + board + ', ' + numberOpponents + ' opponents, ' + runs + ' runs');
 	console.log('won: ' + Math.round( 10000 * results.wins / results.runs ) / 100 + '%');
 	console.log('tied: ' + Math.round( 10000 * results.ties / results.runs ) / 100 + '%');
 	console.log('lost: ' + Math.round( 10000 * results.losses / results.runs )  / 100 + '%');
 	console.log('------------------------------------------------');
-	*/
 	
 	//return the wins/ties/losses/runs results object
-	return results;
+	return {
+	results:results,
+	handOdds:handOdds
+	};
 }
 
 //Draw a random card from a deck array, remove it from the deck array, and return the card value

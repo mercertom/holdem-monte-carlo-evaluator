@@ -97,19 +97,45 @@ exports.holdemMonteCarlo = function (hand,board,numberOpponents,opponentLags,run
 		});
 		cutoff[i] = orderedHandValues[i][Math.floor(runs * (1 - opponentLags[i - 1]))];
 	}
-	
+
 	//Trim impossibilities, based on players' tightness
+	trimmedValues = [
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	];
+	trimmedHands = [
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	];
+
 	for (runNum = 0; runNum < handValues[0].length; runNum++) {
 		for (opp = 1; opp <= numberOpponents; opp++) {
 			if (handValues[opp][runNum] < cutoff[opp]) {
+				break;
+			}
+			if (opp == numberOpponents) {
 				for (i = 0; i <= numberOpponents; i++) {
-					handValues[i].splice(runNum,1);
+					trimmedValues[i].push(handValues[i][runNum]);
 					if(i > 0) {
-						hands[i].splice(runNum,1);
+						trimmedHands[i].push(hands[i][runNum]);
 					}
 				}
-				runNum --;
-				break;
 			}
 		}
 	}
@@ -130,12 +156,12 @@ exports.holdemMonteCarlo = function (hand,board,numberOpponents,opponentLags,run
   	let probableHands = [];
   	let possibleHandTypes = [];
   	
-  	for (runNum = 0; runNum < handValues[0].length; runNum++) {
+  	for (runNum = 0; runNum < trimmedValues[0].length; runNum++) {
 	  	for (i = 0; i <= numberOpponents; i++) {
 	  		if (!possibleHandTypes[i]) {
 	  			possibleHandTypes[i] = [];
 	  		}
-	  		possibleHandTypes[i].push(handTypes[handValues[i][runNum] >> 12]);
+	  		possibleHandTypes[i].push(handTypes[trimmedValues[i][runNum] >> 12]);
 	  	}
 	}
 
@@ -151,27 +177,27 @@ exports.holdemMonteCarlo = function (hand,board,numberOpponents,opponentLags,run
 	
 	for (player in probableHands) {
 		handOdds[player] = {
-		hicard:Math.floor( 100 * probableHands[player].hicard / handValues[0].length || 0),
-		pair:Math.floor( 100 * probableHands[player].pair / handValues[0].length || 0),
-		twopair:Math.floor( 100 * probableHands[player].twopair / handValues[0].length || 0),
-		trips:Math.floor( 100 * probableHands[player].trips / handValues[0].length || 0),
-		straight:Math.floor( 100 * probableHands[player].straight / handValues[0].length || 0),
-		flush:Math.floor( 100 * probableHands[player].flush / handValues[0].length || 0),
-		FH:Math.floor( 100 * probableHands[player].FH / handValues[0].length || 0),
-		quads:Math.floor( 100 * probableHands[player].quads / handValues[0].length || 0),
-		straightflush:Math.floor( 100 * probableHands[player].straightflush / handValues[0].length || 0),
+		hicard:Math.floor( 100 * probableHands[player].hicard / trimmedValues[0].length || 0),
+		pair:Math.floor( 100 * probableHands[player].pair / trimmedValues[0].length || 0),
+		twopair:Math.floor( 100 * probableHands[player].twopair / trimmedValues[0].length || 0),
+		trips:Math.floor( 100 * probableHands[player].trips / trimmedValues[0].length || 0),
+		straight:Math.floor( 100 * probableHands[player].straight / trimmedValues[0].length || 0),
+		flush:Math.floor( 100 * probableHands[player].flush / trimmedValues[0].length || 0),
+		FH:Math.floor( 100 * probableHands[player].FH / trimmedValues[0].length || 0),
+		quads:Math.floor( 100 * probableHands[player].quads / trimmedValues[0].length || 0),
+		straightflush:Math.floor( 100 * probableHands[player].straightflush / trimmedValues[0].length || 0),
 		};
 	}
 	
 	//Eval loop: determine won/lost/tied, and increment results object
-	for (runNum = 0; runNum < handValues[0].length; runNum++, results.runs++) {
+	for (runNum = 0; runNum < trimmedValues[0].length; runNum++, results.runs++) {
 		let isTied = false;
 		for (i = 1; i <= numberOpponents; i++) {
-			if ( handValues[0][runNum] < handValues[i][runNum] ) {
+			if ( trimmedValues[0][runNum] < trimmedValues[i][runNum] ) {
 				results.losses++;
 				break;
 			}
-			else if (handValues[0][runNum] == handValues[i][runNum]) {
+			else if (trimmedValues[0][runNum] == trimmedValues[i][runNum]) {
 				isTied = true;
 			}
 			if (i == numberOpponents) {
@@ -185,7 +211,7 @@ exports.holdemMonteCarlo = function (hand,board,numberOpponents,opponentLags,run
 		}
 	}
 	//catch case where players are impossibly tight
-	if (handValues[0].length == 0) {
+	if (trimmedValues[0].length == 0) {
 		results.runs = 1;
 	}
 	

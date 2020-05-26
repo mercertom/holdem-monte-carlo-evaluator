@@ -37,7 +37,11 @@
     "estimation",
     "model",
     "simulation",
-    "poker"
+    "poker",
+    "bot",
+ 	"bots",
+ 	"poker bot",
+ 	"poker bots"
   ],
   "author": "tmercer",
   "license": "MIT"
